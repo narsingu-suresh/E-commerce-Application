@@ -1,0 +1,92 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Databases
+  payment-db:
+    image: postgres:15
+    container_name: payment-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payments
+    ports:
+      - "5432:5432"
+    volumes:
+      - payment-data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-net
+
+  user-db:
+    image: postgres:15
+    container_name: user-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users
+    ports:
+      - "5433:5432"
+    volumes:
+      - user-data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-net
+
+  # pgAdmin Web UI
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    depends_on:
+      - payment-db
+      - user-db
+    networks:
+      - ecommerce-net
+
+  # MongoDB Database
+  product-db:
+    image: mongo
+    container_name: product-db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: product
+      MONGO_INITDB_ROOT_PASSWORD: product
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - ecommerce-net
+
+  # Mongo Express Web UI
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_BASICAUTH_ENABLED: "true"
+      ME_CONFIG_BASICAUTH_USERNAME: product
+      ME_CONFIG_BASICAUTH_PASSWORD: product
+      ME_CONFIG_MONGODB_URL: mongodb://product:product@product-db:27017/
+    depends_on:
+      - product-db
+    networks:
+      - ecommerce-net
+
+# Volumes for data persistence
+volumes:
+  payment-data:
+  user-data:
+  mongo-data:
+
+# Custom network
+networks:
+  ecommerce-net:
+    driver: bridge
