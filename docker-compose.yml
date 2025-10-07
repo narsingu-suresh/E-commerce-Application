@@ -1,15 +1,14 @@
-version: "3.9"
-
 services:
   # PostgreSQL Databases
   payment-db:
-    image: postgres:15
+    image: postgres:latest
     container_name: payment-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: payments
+      TZ: Asia/Kolkata
     ports:
       - "5432:5432"
     volumes:
@@ -17,18 +16,19 @@ services:
     networks:
       - ecommerce-net
 
-  user-db:
-    image: postgres:15
-    container_name: user-db
+  customer-db:
+    image: postgres:latest
+    container_name: customer-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: users
+      POSTGRES_DB: customers
+      TZ: Asia/Kolkata
     ports:
       - "5433:5432"
     volumes:
-      - user-data:/var/lib/postgresql/data
+      - customer-data:/var/lib/postgresql/data
     networks:
       - ecommerce-net
 
@@ -44,7 +44,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     depends_on:
       - payment-db
-      - user-db
+      - customer-db
     networks:
       - ecommerce-net
 
@@ -83,7 +83,7 @@ services:
 # Volumes for data persistence
 volumes:
   payment-data:
-  user-data:
+  customer-data:
   mongo-data:
 
 # Custom network
